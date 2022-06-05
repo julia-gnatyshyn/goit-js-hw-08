@@ -1,45 +1,48 @@
 import throttle from 'lodash/throttle';
 
-const email = document.querySelector('input');
-const message = document.querySelector('textarea');
-const form = document.querySelector('form');
+const form = document.querySelector('.feedback-form');
 
 const STORAGE_KEY = 'feedback-form-state';
 
+addLocalData();
+
+const formData = {
+  email: form.email.value,
+  message: form.message.value,
+};
+
+form.addEventListener('input', throttle(onFormInput, 500));
 form.addEventListener('submit', onFormSubmit);
-form.addEventListener('input', throttle(onInputChange, 500));
 
-populateText();
-
-const formData = {};
-
-function onFormSubmit(evt) {
-  evt.preventDefault();
-
-  if (email.value === '' || message.value === '')
-    alert('Please fill required fields');
-
-  evt.currentTarget.reset();
-  localStorage.removeItem(STORAGE_KEY);
-  console.log(formData);
-}
-
-function onInputChange(event) {
-  formData.email = email.value;
-  formData.message = message.value;
-
+function onFormInput({ target: { name, value } }) {
+  formData[name] = value;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
 }
 
-function populateText() {
-  const savedMessage = localStorage.getItem(STORAGE_KEY);
+function onFormSubmit(event) {
+  event.preventDefault();
 
-  const parsedData = JSON.parse(savedMessage);
-  if (!parsedData) {
+  const submittedData = {
+    email: event.currentTarget.email.value,
+    message: event.currentTarget.message.value,
+  };
+
+  if (submittedData.email === '' || submittedData.message === '') {
+    alert('Please fill all fields!');
     return;
   }
-  if (parsedData) {
-    email.value = parsedData.email;
-    message.value = parsedData.message;
-  }
+
+  console.log(submittedData);
+
+  localStorage.removeItem(STORAGE_KEY);
+  form.reset();
+}
+
+function addLocalData() {
+  const localData = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+  if (!localData) return;
+
+  if (localData.email) form.email.value = localData.email;
+  if (localData.message) form.message.value = localData.message;
 }
